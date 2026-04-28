@@ -1,0 +1,165 @@
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror Game</title>
+  <script src="dependencies/jquery-3.6.1.min.js"></script>
+  <link href="dependencies/daisyui.css" rel="stylesheet" type="text/css" />
+  <script src="dependencies/tailwindcss.js"></script>
+  <style>
+    .morse-results {
+      font-size: 12px;
+      line-height: 1.15;
+    }
+
+    .morse-results table :where(th, td) {
+      padding: 2px 6px;
+      white-space: nowrap;
+    }
+
+    .letter-grid {
+      display: grid;
+      grid-template-columns: repeat(13, 1fr);
+      gap: 3px;
+      margin-top: 6px;
+    }
+
+    .letter-badge {
+      border: 1px solid #9ca3af;
+      color: #9ca3af;
+      padding: 2px 0;
+      text-align: center;
+      font-weight: 700;
+      background: #f3f4f6;
+    }
+
+    .letter-badge.active {
+      border-color: #166534;
+      color: white;
+      background: #16a34a;
+    }
+
+    .morse-preview {
+      width: 260px;
+    }
+
+    .morse-tree {
+      display: block;
+      width: 100%;
+      height: 190px;
+      margin-top: 6px;
+      background: #102033;
+      border: 1px solid #334155;
+    }
+
+    .morse-tree .tree-link {
+      stroke: #6b7f91;
+      stroke-width: 2;
+    }
+
+    .morse-tree .tree-link.active {
+      stroke: #22c55e;
+      stroke-width: 4;
+    }
+
+    .morse-tree .tree-node {
+      fill: #24384d;
+      stroke: #94a3b8;
+      stroke-width: 2;
+    }
+
+    .morse-tree .tree-node.active {
+      fill: #22c55e;
+      stroke: #bbf7d0;
+    }
+
+    .morse-tree .tree-node.target {
+      fill: #f59e0b;
+      stroke: white;
+    }
+
+    .morse-tree .tree-label {
+      fill: #dbeafe;
+      font-size: 11px;
+      font-weight: 700;
+      text-anchor: middle;
+      dominant-baseline: middle;
+      pointer-events: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="flex">
+    <div class="max-w-min border flex flex-col gap-2 p-1" style="min-height: 450">
+      <div class="text-center text-2xl">History</div>
+      <table class="table table-fixed">
+        <thead>
+          <tr>
+            <td>#</td>
+            <td>Start</td>
+            <td>Reflect</td>
+            <td>Goal</td>
+            <td>Morse</td>
+            <td>Letter</td>
+          </tr>
+        </thead>
+      </table>
+      <div id="historyDiv" class="h-60 overflow-y-scroll">
+        <table id="historyTable" class="w-full table table-fixed">
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <label>Start Point: </label>
+        <input id="queryInput" type="number" min=1 max=20 class="input input-bordered" value=1>
+      </div>
+      <div class="border p-2 morse-preview">
+        <div class="font-bold">Morse Preview</div>
+        <div>Code: <span id="morseCodeText">-</span></div>
+        <div>Letter: <span id="morseLetterText">-</span></div>
+        <div>Output: <span id="morseOutputText">-</span></div>
+        <svg id="morseTree" class="morse-tree" viewBox="0 0 260 190"></svg>
+      </div>
+      <button id="queryButton" class="btn w-full">Query</button>
+      <button id="getmapButton" class="btn w-full">Get Piece Map</button>
+    </div>
+    <div>
+      <canvas id="canvas" class="border" height=450 width=862.5></canvas>
+      <p>To rotate piece, press R while drag.</p>
+      <p>Hover number on board to see laser preview of your submit.</p>
+      <p>Click number on board to set start point easily.</p>
+      <button id="submitButton" class="btn mt-1 w-full">submit</button>
+      <p id="resultText"></p>
+      <div class="mt-2 morse-results">
+        <div class="font-bold">All Morse Results</div>
+        <div class="border">
+          <table class="table table-fixed table-xs w-full">
+            <thead>
+              <tr>
+                <td>Input</td>
+                <td>Reflect</td>
+                <td>Output</td>
+                <td>Morse</td>
+                <td>Letter</td>
+              </tr>
+            </thead>
+            <tbody id="morseTableBody">
+            </tbody>
+          </table>
+        </div>
+        <div id="letterGrid" class="letter-grid"></div>
+      </div>
+    </div>
+  </div>
+  <script src="src/utils.js"></script>
+  <script src="src/mirrorGame.js"></script>
+  <script src="src/gameObject.js"></script>
+  <script src="src/renderer.js"></script>
+  <script src="src/main.js"></script>
+</body>
+
+</html>
