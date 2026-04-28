@@ -11,7 +11,8 @@ class MirrorGame {
       [['S'],
        ['B']],
       [['S'],
-       ['B']]
+       ['B']],
+      [['O']]
     ]
 
     this.newGame()

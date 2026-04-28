@@ -12,7 +12,13 @@ function rotate90(grid) {
   for (let r = 0; r < gridCol; r++) {
     let row = []
     for (let c = 0; c < gridRow; c++) {
-      let s = grid[c][gridCol-1 - r] === 'B' ? 'S' : 'B'
+      const cell = grid[c][gridCol-1 - r]
+      let s = cell
+      if (cell === 'B') {
+        s = 'S'
+      } else if (cell === 'S') {
+        s = 'B'
+      }
       row.push(s)
     }
     rotated.push(row)
@@ -119,6 +125,10 @@ function traceRay(grid, n) {
       morse += '-'
       reflect++
       ;[dy, dx] = [dx, dy]
+    } else if (state === 'O') {
+      reflect++
+      dx = -dx
+      dy = -dy
     }
     x += dx
     y += dy

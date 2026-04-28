@@ -177,11 +177,12 @@ class Piece extends Grid {
             fillGrid(this.board.grid.cellState, row, col, this.cellState)
 
             this.name = `piece_${row}_${col}`
+            const pieceType = getPieceType(this.cellState)
             setPieces[this.name] = {
-              "type": (this.cellState.length > 1 && this.cellState[0].length > 1) ? 'full' : 'half',
+              "type": pieceType,
               "x": this.boardCol,
               "y": this.boardRow,
-              "rotation": (this.cellState.length > 1 && this.cellState[0].length > 1) ? 0 : (this.rotation - 1 + 4) % 4
+              "rotation": pieceType === 'half' ? (this.rotation - 1 + 4) % 4 : 0
             }
           } else {
             this.x = this.initX

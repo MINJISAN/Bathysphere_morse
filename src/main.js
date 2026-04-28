@@ -52,10 +52,10 @@ function init() {
 
   // Init pieces
   for (let i = 0; i < game.initPieces.length; i++) {
-    const x = canvasHeight + cellSize/2 + cellSize*2.5*Math.floor(i/2)
+    const x = canvasHeight + cellSize/2 + cellSize*2*Math.floor(i/2)
     const y = cellSize/2 + cellSize/4 + cellSize*2.5*Math.floor(i%2)
     const cellState = game.initPieces[i]
-    const color = cellState[0].length > 1 ? '#73AB84' : '#99D19C'
+    const color = cellState[0][0] === 'O' ? '#F4D35E' : (cellState[0].length > 1 ? '#73AB84' : '#99D19C')
     const piece = new Piece(x, y, cellState, color, submitBoard)
     pieces.push(piece)
     gameObjects.push(piece)
@@ -307,10 +307,10 @@ function init() {
       piece.name = `piece_${placement.row}_${placement.col}_${i}`
       fillGrid(submitBoard.grid.cellState, placement.row, placement.col, piece.cellState)
       setPieces[piece.name] = {
-        "type": (piece.cellState.length > 1 && piece.cellState[0].length > 1) ? 'full' : 'half',
+        "type": getPieceType(piece.cellState),
         "x": piece.boardCol,
         "y": piece.boardRow,
-        "rotation": (piece.cellState.length > 1 && piece.cellState[0].length > 1) ? 0 : (piece.rotation - 1 + 4) % 4
+        "rotation": getPieceType(piece.cellState) === 'half' ? (piece.rotation - 1 + 4) % 4 : 0
       }
     }
   }
@@ -421,4 +421,11 @@ function draw() {
   renderer.drawBackground()
   gameObjects.sort((a, b) => (a.z - b.z))
   gameObjects.forEach(obj => obj.draw())
+}
+
+function getPieceType(cellState) {
+  if (cellState.length === 1 && cellState[0].length === 1 && cellState[0][0] === 'O') {
+    return 'reflector'
+  }
+  return (cellState.length > 1 && cellState[0].length > 1) ? 'full' : 'half'
 }

@@ -35,6 +35,13 @@ class Renderer {
       this.ctx.lineWidth = 2
       this.ctx.stroke()
     }
+    if (state == 'O') {
+      this.ctx.beginPath()
+      this.ctx.arc(x + cellSize / 2, y + cellSize / 2, cellSize / 4, 0, Math.PI * 2)
+      this.ctx.lineWidth = 3
+      this.ctx.stroke()
+      this.drawText(x + cellSize / 2, y + cellSize / 2, cellSize / 4, 'O')
+    }
   }
 
   drawText(x, y, fontSize, text) {
