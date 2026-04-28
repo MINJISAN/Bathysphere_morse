@@ -83,7 +83,17 @@ const MORSE_TABLE = {
   '.--': 'W',
   '-..-': 'X',
   '-.--': 'Y',
-  '--..': 'Z'
+  '--..': 'Z',
+  '-----': '0',
+  '.----': '1',
+  '..---': '2',
+  '...--': '3',
+  '....-': '4',
+  '.....': '5',
+  '-....': '6',
+  '--...': '7',
+  '---..': '8',
+  '----.': '9'
 }
 
 function morseToLetter(morse) {
@@ -91,6 +101,32 @@ function morseToLetter(morse) {
     return '-'
   }
   return MORSE_TABLE[morse] || '?'
+}
+
+function splitMorse(morse, stoppedByReflector) {
+  if (!morse) {
+    return []
+  }
+  if (stoppedByReflector || morse.length <= 4 || MORSE_TABLE[morse]) {
+    return [morse]
+  }
+
+  let segments = []
+  for (let i = 0; i < morse.length; i += 4) {
+    segments.push(morse.slice(i, i + 4))
+  }
+  return segments
+}
+
+function describeMorse(morse, stoppedByReflector) {
+  const segments = splitMorse(morse, stoppedByReflector)
+  const letters = segments.map(segment => morseToLetter(segment))
+  return {
+    segments,
+    letters,
+    displayMorse: segments.length ? segments.join('/') : '-',
+    displayLetter: letters.length ? letters.join('/') : '-'
+  }
 }
 
 function traceRay(grid, n) {
@@ -111,6 +147,7 @@ function traceRay(grid, n) {
   }]
   let morse = ''
   let reflect = 0
+  let morseStopped = false
 
   x += dx
   y += dy
@@ -118,15 +155,20 @@ function traceRay(grid, n) {
     const state = grid[y][x]
     path.push({ x, y, dx, dy, state })
     if (state === 'S') {
-      morse += '.'
+      if (!morseStopped) {
+        morse += '.'
+      }
       reflect++
       ;[dy, dx] = [-dx, -dy]
     } else if (state === 'B') {
-      morse += '-'
+      if (!morseStopped) {
+        morse += '-'
+      }
       reflect++
       ;[dy, dx] = [dx, dy]
     } else if (state === 'O') {
       reflect++
+      morseStopped = true
       dx = -dx
       dy = -dy
     }
@@ -135,11 +177,16 @@ function traceRay(grid, n) {
   }
 
   const goal = ray2n(x, y, row, col)
+  const morseInfo = describeMorse(morse, morseStopped)
   path.push({ x, y, dx, dy, edge: true })
   return {
     path,
     morse,
-    letter: morseToLetter(morse),
+    displayMorse: morseInfo.displayMorse,
+    segments: morseInfo.segments,
+    letters: morseInfo.letters,
+    letter: morseInfo.displayLetter,
+    morseStopped,
     reflect,
     goal
   }

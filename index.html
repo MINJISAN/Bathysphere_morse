@@ -118,6 +118,15 @@
       dominant-baseline: middle;
       pointer-events: none;
     }
+
+    .piece-map-output {
+      width: 100%;
+      min-height: 120px;
+      resize: vertical;
+      font-family: monospace;
+      font-size: 12px;
+      white-space: pre;
+    }
   </style>
 </head>
 
@@ -156,6 +165,7 @@
       </div>
       <button id="queryButton" class="btn w-full">Query</button>
       <button id="getmapButton" class="btn w-full">Get Piece Map</button>
+      <textarea id="pieceMapOutput" class="textarea textarea-bordered piece-map-output" readonly placeholder="Piece map output"></textarea>
     </div>
     <div>
       <canvas id="canvas" class="border" height=450 width=862.5></canvas>

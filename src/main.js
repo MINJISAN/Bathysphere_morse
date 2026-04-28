@@ -17,6 +17,7 @@ function init() {
   const queryInput = document.querySelector('#queryInput')
   const queryButton = document.querySelector('#queryButton')
   const getmapButtom = document.querySelector('#getmapButton')
+  const pieceMapOutput = document.querySelector('#pieceMapOutput')
   const submitButton = document.querySelector('#submitButton')
   const resultText = document.querySelector('#resultText')
   const morseCodeText = document.querySelector('#morseCodeText')
@@ -27,7 +28,7 @@ function init() {
   const letterGrid = document.querySelector('#letterGrid')
   const autoArrangeButton = document.querySelector('#autoArrangeButton')
   const targetStatusText = document.querySelector('#targetStatusText')
-  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
+  const symbols = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split('')
   const selectedLetters = new Set()
   const morseTreeNodes = {}
   const morseTreeLinks = {}
@@ -89,7 +90,7 @@ function init() {
       row.insertCell(1).innerHTML = start
       row.insertCell(2).innerHTML = reflect
       row.insertCell(3).innerHTML = goal
-      row.insertCell(4).innerHTML = boardTrace.morse || '-'
+      row.insertCell(4).innerHTML = boardTrace.displayMorse
       row.insertCell(5).innerHTML = boardTrace.letter
       historyDiv.scrollTop(historyDiv[0].scrollHeight)
       submitButton.disabled = false
@@ -106,8 +107,16 @@ function init() {
     let cellStateStr = cellState.map(row => row.join('')).join('\n')
     // Replace ' ' to 'E'
     cellStateStr = cellStateStr.replace(/ /g, 'E')
+    const pieceMapStr = JSON.stringify(Object.values(setPieces))
+    pieceMapOutput.value = cellStateStr + '\n' + pieceMapStr
+    pieceMapOutput.focus()
+    pieceMapOutput.select()
     console.log(cellStateStr)
-    console.log(JSON.stringify(Object.values(setPieces)))
+    console.log(pieceMapStr)
+  })
+
+  pieceMapOutput.addEventListener('click', function() {
+    pieceMapOutput.select()
   })
 
   submitButton.disabled = true
@@ -139,10 +148,10 @@ function init() {
       return
     }
 
-    morseCodeText.innerHTML = trace.morse || '-'
+    morseCodeText.innerHTML = trace.displayMorse
     morseLetterText.innerHTML = trace.letter
     morseOutputText.innerHTML = trace.goal
-    updateMorseTree(trace.morse)
+    updateMorseTree(trace.segments[0] || '')
   }
 
   function updateMorseTable() {
@@ -151,14 +160,12 @@ function init() {
     const maxInput = submitBoard.row * 2 + submitBoard.col * 2
     for (let n = 1; n <= maxInput; n++) {
       const trace = traceRay(submitBoard.grid.cellState, n)
-      if (alphabet.includes(trace.letter)) {
-        letters.add(trace.letter)
-      }
+      addTraceLetters(letters, trace)
       const row = morseTableBody.insertRow()
       row.insertCell(0).innerHTML = n
       row.insertCell(1).innerHTML = trace.reflect
       row.insertCell(2).innerHTML = trace.goal
-      row.insertCell(3).innerHTML = trace.morse || '-'
+      row.insertCell(3).innerHTML = trace.displayMorse
       row.insertCell(4).innerHTML = trace.letter
     }
     updateLetterGrid(letters)
@@ -166,7 +173,7 @@ function init() {
 
   function updateLetterGrid(letters) {
     letterGrid.innerHTML = ''
-    alphabet.forEach(letter => {
+    symbols.forEach(letter => {
       const item = document.createElement('div')
       const classes = ['letter-badge']
       if (letters.has(letter)) {
@@ -279,9 +286,7 @@ function init() {
     const maxInput = board.length * 2 + board[0].length * 2
     for (let n = 1; n <= maxInput; n++) {
       const trace = traceRay(board, n)
-      if (alphabet.includes(trace.letter)) {
-        letters.add(trace.letter)
-      }
+      addTraceLetters(letters, trace)
     }
 
     for (const target of targets) {
@@ -290,6 +295,14 @@ function init() {
       }
     }
     return true
+  }
+
+  function addTraceLetters(letters, trace) {
+    trace.letters.forEach(letter => {
+      if (symbols.includes(letter)) {
+        letters.add(letter)
+      }
+    })
   }
 
   function applyArrangement(placements) {
@@ -332,7 +345,9 @@ function init() {
     const svgNS = 'http://www.w3.org/2000/svg'
     const letterByCode = {}
     Object.keys(MORSE_TABLE).forEach(code => {
-      letterByCode[code] = MORSE_TABLE[code]
+      if (/^[A-Z]$/.test(MORSE_TABLE[code])) {
+        letterByCode[code] = MORSE_TABLE[code]
+      }
     })
 
     const positions = { '': { x: 130, y: 18 } }
