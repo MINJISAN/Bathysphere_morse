@@ -25,9 +25,13 @@ function init() {
   const morseTree = document.querySelector('#morseTree')
   const morseTableBody = document.querySelector('#morseTableBody')
   const letterGrid = document.querySelector('#letterGrid')
+  const autoArrangeButton = document.querySelector('#autoArrangeButton')
+  const targetStatusText = document.querySelector('#targetStatusText')
   const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
+  const selectedLetters = new Set()
   const morseTreeNodes = {}
   const morseTreeLinks = {}
+  const pieces = []
 
   const canvas = document.querySelector('#canvas')
   renderer = new Renderer(canvas)
@@ -53,6 +57,7 @@ function init() {
     const cellState = game.initPieces[i]
     const color = cellState[0].length > 1 ? '#73AB84' : '#99D19C'
     const piece = new Piece(x, y, cellState, color, submitBoard)
+    pieces.push(piece)
     gameObjects.push(piece)
   }
 
@@ -77,20 +82,22 @@ function init() {
     const start = parseInt(queryInput.value)
     if (start) {
       updateMorsePreview()
-      const {tryCount, reflect, goal, morse, letter} = game.query(start)
+      const boardTrace = traceRay(submitBoard.grid.cellState, start)
+      const {tryCount, reflect, goal} = game.query(start)
       const row = historyTable.insertRow(tryCount-1)
       row.insertCell(0).innerHTML = tryCount
       row.insertCell(1).innerHTML = start
       row.insertCell(2).innerHTML = reflect
       row.insertCell(3).innerHTML = goal
-      row.insertCell(4).innerHTML = morse || '-'
-      row.insertCell(5).innerHTML = letter
+      row.insertCell(4).innerHTML = boardTrace.morse || '-'
+      row.insertCell(5).innerHTML = boardTrace.letter
       historyDiv.scrollTop(historyDiv[0].scrollHeight)
       submitButton.disabled = false
     }
   })
 
   queryInput.addEventListener('input', updateMorsePreview)
+  autoArrangeButton.addEventListener('click', arrangeSelectedLetters)
 
   // handleGetPieceMap
   getmapButtom.addEventListener('click', function(event) {
@@ -161,10 +168,164 @@ function init() {
     letterGrid.innerHTML = ''
     alphabet.forEach(letter => {
       const item = document.createElement('div')
-      item.className = letters.has(letter) ? 'letter-badge active' : 'letter-badge'
+      const classes = ['letter-badge']
+      if (letters.has(letter)) {
+        classes.push('active')
+      }
+      if (selectedLetters.has(letter)) {
+        classes.push('selected')
+      }
+      item.className = classes.join(' ')
       item.innerHTML = letter
+      item.addEventListener('click', function() {
+        if (selectedLetters.has(letter)) {
+          selectedLetters.delete(letter)
+        } else {
+          selectedLetters.add(letter)
+        }
+        targetStatusText.innerHTML = ''
+        updateLetterGrid(letters)
+      })
       letterGrid.appendChild(item)
     })
+  }
+
+  function arrangeSelectedLetters() {
+    const targets = new Set(selectedLetters)
+    if (targets.size === 0) {
+      targetStatusText.style.color = '#374151'
+      targetStatusText.innerHTML = 'Select letters first.'
+      return
+    }
+
+    autoArrangeButton.disabled = true
+    targetStatusText.style.color = '#374151'
+    targetStatusText.innerHTML = 'Searching...'
+
+    setTimeout(function() {
+      const solution = findArrangementForLetters(targets)
+      if (!solution) {
+        targetStatusText.style.color = '#dc2626'
+        targetStatusText.innerHTML = 'No possible arrangement.'
+        autoArrangeButton.disabled = false
+        return
+      }
+
+      applyArrangement(solution)
+      updateMorsePreview()
+      updateMorseTable()
+      targetStatusText.style.color = '#16a34a'
+      targetStatusText.innerHTML = 'Arrangement found.'
+      autoArrangeButton.disabled = false
+    }, 10)
+  }
+
+  function findArrangementForLetters(targets) {
+    const candidates = game.initPieces.map(piece => genPieceCandidates(piece, game.boardRow, game.boardCol))
+    const board = genEmptyGrid(game.boardRow, game.boardCol)
+    const placements = []
+
+    function search(pieceIndex) {
+      if (pieceIndex === candidates.length) {
+        return boardIncludesLetters(board, targets) ? placements.map(copyPlacement) : null
+      }
+
+      for (let i = 0; i < candidates[pieceIndex].length; i++) {
+        const candidate = candidates[pieceIndex][i]
+        if (!isEmpty(board, candidate.row, candidate.col, candidate.state.length, candidate.state[0].length)) {
+          continue
+        }
+        fillGrid(board, candidate.row, candidate.col, candidate.state)
+        placements[pieceIndex] = candidate
+        const result = search(pieceIndex + 1)
+        if (result) {
+          return result
+        }
+        fillGrid(board, candidate.row, candidate.col, genEmptyGrid(candidate.state.length, candidate.state[0].length))
+        placements[pieceIndex] = null
+      }
+      return null
+    }
+
+    return search(0)
+  }
+
+  function genPieceCandidates(piece, boardRow, boardCol) {
+    const candidates = []
+    const seenStates = new Set()
+    let state = cloneGrid(piece)
+    for (let rotation = 0; rotation < 4; rotation++) {
+      const key = state.map(row => row.join('')).join('|')
+      if (!seenStates.has(key)) {
+        seenStates.add(key)
+        for (let row = 0; row <= boardRow - state.length; row++) {
+          for (let col = 0; col <= boardCol - state[0].length; col++) {
+            candidates.push({
+              row,
+              col,
+              rotation,
+              state: cloneGrid(state)
+            })
+          }
+        }
+      }
+      state = rotate90(state)
+    }
+    return candidates
+  }
+
+  function boardIncludesLetters(board, targets) {
+    const letters = new Set()
+    const maxInput = board.length * 2 + board[0].length * 2
+    for (let n = 1; n <= maxInput; n++) {
+      const trace = traceRay(board, n)
+      if (alphabet.includes(trace.letter)) {
+        letters.add(trace.letter)
+      }
+    }
+
+    for (const target of targets) {
+      if (!letters.has(target)) {
+        return false
+      }
+    }
+    return true
+  }
+
+  function applyArrangement(placements) {
+    submitBoard.grid.cellState = genEmptyGrid(game.boardRow, game.boardCol)
+    setPieces = {}
+    for (let i = 0; i < placements.length; i++) {
+      const placement = placements[i]
+      const piece = pieces[i]
+      piece.cellState = cloneGrid(placement.state)
+      piece.x = submitBoard.grid.x + placement.col * cellSize
+      piece.y = submitBoard.grid.y + placement.row * cellSize
+      piece.boardRow = placement.row
+      piece.boardCol = placement.col
+      piece.rotation = placement.rotation
+      piece.name = `piece_${placement.row}_${placement.col}_${i}`
+      fillGrid(submitBoard.grid.cellState, placement.row, placement.col, piece.cellState)
+      setPieces[piece.name] = {
+        "type": (piece.cellState.length > 1 && piece.cellState[0].length > 1) ? 'full' : 'half',
+        "x": piece.boardCol,
+        "y": piece.boardRow,
+        "rotation": (piece.cellState.length > 1 && piece.cellState[0].length > 1) ? 0 : (piece.rotation - 1 + 4) % 4
+      }
+    }
+  }
+
+  function cloneGrid(grid) {
+    return grid.map(row => row.slice())
+  }
+
+  function copyPlacement(placement) {
+    return {
+      row: placement.row,
+      col: placement.col,
+      rotation: placement.rotation,
+      state: cloneGrid(placement.state)
+    }
   }
 
   function initMorseTree() {

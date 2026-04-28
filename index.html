@@ -19,6 +19,18 @@
       white-space: nowrap;
     }
 
+    .history-table {
+      width: 100%;
+      table-layout: fixed;
+      font-size: 13px;
+    }
+
+    .history-table :where(th, td) {
+      padding: 5px 4px;
+      text-align: center;
+      white-space: nowrap;
+    }
+
     .letter-grid {
       display: grid;
       grid-template-columns: repeat(13, 1fr);
@@ -33,6 +45,8 @@
       text-align: center;
       font-weight: 700;
       background: #f3f4f6;
+      cursor: pointer;
+      user-select: none;
     }
 
     .letter-badge.active {
@@ -41,8 +55,19 @@
       background: #16a34a;
     }
 
+    .letter-badge.selected {
+      box-shadow: 0 0 0 2px #f59e0b inset;
+    }
+
+    .target-status {
+      min-height: 18px;
+      margin-top: 4px;
+      font-weight: 700;
+    }
+
     .side-panel {
-      width: 340px;
+      width: 430px;
+      flex: 0 0 430px;
     }
 
     .morse-preview {
@@ -100,7 +125,7 @@
   <div class="flex">
     <div class="side-panel border flex flex-col gap-2 p-1" style="min-height: 450">
       <div class="text-center text-2xl">History</div>
-      <table class="table table-fixed">
+      <table class="table history-table">
         <thead>
           <tr>
             <td>#</td>
@@ -113,7 +138,7 @@
         </thead>
       </table>
       <div id="historyDiv" class="h-60 overflow-y-scroll">
-        <table id="historyTable" class="w-full table table-fixed">
+        <table id="historyTable" class="table history-table">
           <tbody>
           </tbody>
         </table>
@@ -157,6 +182,8 @@
           </table>
         </div>
         <div id="letterGrid" class="letter-grid"></div>
+        <button id="autoArrangeButton" class="btn btn-xs mt-2 w-full">Arrange Selected Letters</button>
+        <div id="targetStatusText" class="target-status"></div>
       </div>
     </div>
   </div>
