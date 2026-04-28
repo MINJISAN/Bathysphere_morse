@@ -41,8 +41,13 @@
       background: #16a34a;
     }
 
+    .side-panel {
+      width: 340px;
+    }
+
     .morse-preview {
-      width: 260px;
+      box-sizing: border-box;
+      width: 100%;
     }
 
     .morse-tree {
@@ -93,7 +98,7 @@
 
 <body>
   <div class="flex">
-    <div class="max-w-min border flex flex-col gap-2 p-1" style="min-height: 450">
+    <div class="side-panel border flex flex-col gap-2 p-1" style="min-height: 450">
       <div class="text-center text-2xl">History</div>
       <table class="table table-fixed">
         <thead>
@@ -122,7 +127,7 @@
         <div>Code: <span id="morseCodeText">-</span></div>
         <div>Letter: <span id="morseLetterText">-</span></div>
         <div>Output: <span id="morseOutputText">-</span></div>
-        <svg id="morseTree" class="morse-tree" viewBox="0 0 260 190"></svg>
+        <svg id="morseTree" class="morse-tree" viewBox="-20 0 300 190"></svg>
       </div>
       <button id="queryButton" class="btn w-full">Query</button>
       <button id="getmapButton" class="btn w-full">Get Piece Map</button>
